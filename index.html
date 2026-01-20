@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Calculator</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+    }
+
+    .calculator {
+      width: 320px;
+      background: #222;
+      padding: 20px;
+      border-radius: 10px;
+    }
+
+    .display {
+      background: #000;
+      color: #0f0;
+      font-size: 32px;
+      text-align: right;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    button {
+      width: 25%;
+      padding: 20px;
+      font-size: 18px;
+      border: 1px solid #444;
+      background: #333;
+      color: white;
+      cursor: pointer;
+    }
+
+    button.operator {
+      background: #ff9500;
+    }
+
+    button.control {
+      background: #555;
+    }
+
+    button:hover {
+      filter: brightness(1.2);
+    }
+  </style>
+</head>
+<body>
+
+<div class="calculator">
+  <div class="display" id="display">0</div>
+
+  <div class="buttons">
+    <button class="control" data-action="clear">C</button>
+    <button class="control" data-action="backspace">⌫</button>
+    <button class="operator" data-operator="/">÷</button>
+    <button class="operator" data-operator="*">×</button>
+
+    <button data-number="7">7</button>
+    <button data-number="8">8</button>
+    <button data-number="9">9</button>
+    <button class="operator" data-operator="-">−</button>
+
+    <button data-number="4">4</button>
+    <button data-number="5">5</button>
+    <button data-number="6">6</button>
+    <button class="operator" data-operator="+">+</button>
+
+    <button data-number="1">1</button>
+    <button data-number="2">2</button>
+    <button data-number="3">3</button>
+    <button data-action="equals" class="operator">=</button>
+
+    <button data-number="0" style="width: 50%;">0</button>
+    <button data-action="decimal">.</button>
+  </div>
+</div>
+
+<script>
+  // Math functions
+  const add = (a, b) => a + b;
+  const subtract = (a, b) => a - b;
+  const multiply = (a, b) => a * b;
+  const divide = (a, b) => b === 0 ? "Nice try 😏" : a / b;
+
+  function operate(operator, a, b) {
+    a = Number(a);
+    b = Number(b);
+
+    switch (operator) {
+      case "+": return add(a, b);
+      case "-": return subtract(a, b);
+      case "*": return multiply(a, b);
+      case "/": return divide(a, b);
+      default: return null;
+    }
+  }
+
+  // Calculator state
+  let firstNumber = null;
+  let secondNumber = null;
+  let currentOperator = null;
+  let shouldResetDisplay = false;
+
+  const display = document.getElementById("display");
+  const buttons = document.querySelectorAll("button");
+
+  function updateDisplay(value) {
+    display.textContent = value;
+  }
+
+  function clearCalculator() {
+    firstNumber = null;
+    secondNumber = null;
+    currentOperator = null;
+    shouldResetDisplay = false;
+    updateDisplay("0");
+  }
+
+  function appendNumber(number) {
+    if (display.textContent === "0" || shouldResetDisplay) {
+      updateDisplay(number);
+      shouldResetDisplay = false;
+    } else {
+      updateDisplay(display.textContent + number);
+    }
+  }
+
+  function addDecimal() {
+    if (shouldResetDisplay) updateDisplay("0");
+    if (!display.textContent.includes(".")) {
+      updateDisplay(display.textContent + ".");
+    }
+  }
+
+  function setOperator(operator) {
+    if (currentOperator !== null) evaluate();
+    firstNumber = display.textContent;
+    currentOperator = operator;
+    shouldResetDisplay = true;
+  }
+
+  function evaluate() {
+    if (currentOperator === null || shouldResetDisplay) return;
+
+    secondNumber = display.textContent;
+    let result = operate(currentOperator, firstNumber, secondNumber);
+
+    if (typeof result === "number") {
+      result = Math.round(result * 100000) / 100000;
+    }
+
+    updateDisplay(result);
+    firstNumber = result;
+    currentOperator = null;
+    shouldResetDisplay = true;
+  }
+
+  function backspace() {
+    if (shouldResetDisplay) return;
+    if (display.textContent.length === 1) {
+      updateDisplay("0");
+    } else {
+      updateDisplay(display.textContent.slice(0, -1));
+    }
+  }
+
+  // Button clicks
+  buttons.forEach(button => {
+    button.addEventListener("click", () => {
+      if (button.dataset.number) appendNumber(button.dataset.number);
+      if (button.dataset.operator) setOperator(button.dataset.operator);
+      if (button.dataset.action === "equals") evaluate();
+      if (button.dataset.action === "clear") clearCalculator();
+      if (button.dataset.action === "decimal") addDecimal();
+      if (button.dataset.action === "backspace") backspace();
+    });
+  });
+
+  // Keyboard support
+  window.addEventListener("keydown", e => {
+    if (!isNaN(e.key)) appendNumber(e.key);
+    if (["+", "-", "*", "/"].includes(e.key)) setOperator(e.key);
+    if (e.key === "Enter" || e.key === "=") evaluate();
+    if (e.key === ".") addDecimal();
+    if (e.key === "Backspace") backspace();
+    if (e.key === "Escape") clearCalculator();
+  });
+</script>
+
+</body>
+</html>
